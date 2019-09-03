@@ -145,7 +145,7 @@ class BTKbDevice():
         self.scontrol=BluetoothSocket(L2CAP)
         self.sinterrupt=BluetoothSocket(L2CAP)
 
-        #bind these sockets to a port - port zero to select next available		
+        #bind these sockets to a port - port zero to select next available      
         self.scontrol.bind((self.MY_ADDRESS,self.P_CTRL))
         self.sinterrupt.bind((self.MY_ADDRESS,self.P_INTR ))
 
@@ -163,8 +163,8 @@ class BTKbDevice():
     #send a string to the bluetooth host machine
     def send_string(self,message):
 
-     #    print("Sending "+message)
-         self.cinterrupt.send(message)
+        print("Sending "+message)
+        self.cinterrupt.send(message)
 
 
 
@@ -186,6 +186,12 @@ class  BTKbService(dbus.service.Object):
 
         #start listening for connections
         self.device.listen();
+
+    @dbus.service.method('org.yaptb.btkbservice', in_signature='s')
+    def send_message(self, message):
+        print("received input")
+        self.device.send_message(message)
+
 
     @dbus.service.method('org.yaptb.btkbservice', in_signature='yay')
     def send_keys(self,modifier_byte,keys):

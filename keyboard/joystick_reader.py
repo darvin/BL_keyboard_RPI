@@ -3,7 +3,6 @@ import os, struct, array
 import evdev
 from fcntl import ioctl
 from evdev import list_devices, InputDevice, categorize, ecodes
-from select import select
 import pprint
 
 
@@ -84,15 +83,13 @@ def generate_virtual_joystick_and_device_descriptors_from_all_hardware_joysticks
                 vjoy.add_axises(device.fd, capability)
 
 
-    pprint.pprint(vjoy.capability)
-    pprint.pprint(vjoy.mapping)
-
     devices_descriptors = {dev.fd: dev for dev in devices}
 
     return vjoy,devices_descriptors
 
 
 if __name__=="__main__":
+    from select import select
     vjoy,devices_descriptors = generate_virtual_joystick_and_device_descriptors_from_all_hardware_joysticks()
     def main_loop():
         while True:

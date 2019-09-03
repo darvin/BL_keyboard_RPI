@@ -16,13 +16,16 @@ import time
 import evdev # used to get input from the keyboard
 from evdev import *
 import keymap # used to map evdev input to hid keodes
+from select import select
+import pprint
 
-
+import joystick_reader
 
 #Define a client to listen to local key events
-class Keyboard():
+class Joystick():
 
     def __init__(self):
+        self.vjoy, self.devices_descriptors = joystick_reader.generate_virtual_joystick_and_device_descriptors_from_all_hardware_joysticks()
         #the structure for a bt keyboard input report (size is 10 bytes)
 
         self.state=[
@@ -90,27 +93,85 @@ class Keyboard():
 
     #poll for keyboard events
     def event_loop(self):
-        for event in self.dev.read_loop():
-            #only bother if we hit a key and its an up or down event
-            if event.type==ecodes.EV_KEY and event.value < 2:
-                self.change_state(event)
-                self.send_input()
+        print "starting event loop with devices_descriptors", self.devices_descriptors
+        while True:
+            r, w, x = select(self.devices_descriptors, [], [])
+            for fd in r:
+                for event in self.devices_descriptors[fd].read():
+                    time, value, event_type, code = event.timestamp(), event.value, event.type, event.code
 
-    #forward keyboard events to the dbus service
-    def send_input(self):
+                    if event_type & 0x80:
+                        print "(initial)",
 
-        bin_str=""
-        element=self.state[2]
-        for bit in element:
-            bin_str += str(bit)
+                    vcode = -1
 
-        self.iface.send_keys(int(bin_str,2),self.state[4:10]  )
+                    if event_type & 0x02:
+                        vcode = self.vjoy.get_vaxis(fd, code)
+                    elif event_type & 0x01:
+                        vcode = self.vjoy.get_vbutton(fd, code)
+                    else:
+                        continue
+
+
+
+                    print "sending input"
+                    str_inp = ""
+
+                    inp = [
+                        0xA1,
+                        0x03,
+                        [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,0,0
+                        ],
+                        0x00,
+                        0x00,0x00,0x00]
+
+                    if code <  len(inp[2]):
+                        inp[2][code] = long(value) #fixme
+
+                    print(inp)
+                    for elem in inp:
+                        if type(elem) is list:
+                            tmp_str = ""
+                            for tmp_elem in elem:
+                                tmp_str += str(tmp_elem)
+                            for i in range(0,len(tmp_str)/8):
+                                if((i+1)*8 >= len(tmp_str)):
+                                    str_inp += chr(int(tmp_str[i*8:],2))
+                                else:
+                                    str_inp += chr(int(tmp_str[i*8:(i+1)*8],2))
+                        else:
+                            str_inp += chr(elem)
+
+                    print "sending message", str_inp
+                    self.iface.send_message(str_inp)
+
+
+        # for event in self.dev.read_loop():
+        #     #only bother if we hit a key and its an up or down event
+        #     if event.type==ecodes.EV_KEY and event.value < 2:
+        #         self.change_state(event)
+        #         self.send_input()
+
 
 if __name__ == "__main__":
 
     print "Setting up keyboard"
 
-    kb = Keyboard()
+    joy = Joystick()
 
     print "starting event loop"
-    kb.event_loop()
+    joy.event_loop()
