@@ -8,6 +8,7 @@ sudo hciconfig hcio up
 ./updateName.sh ThanhLe_Keyboard
 #Get current Path
 export C_PATH=$(pwd)
+echo $C_PATH
 #Create Tmux session
 tmux has-session -t  mlabviet
 if [ $? != 0 ]; then

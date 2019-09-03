@@ -70,7 +70,7 @@ class BTKbBluezProfile(dbus.service.Object):
 #
 class BTKbDevice():
     #change these constants 
-    MY_ADDRESS="43:43:A1:12:1F:AC"
+    MY_ADDRESS="B8:27:EB:CC:FD:09"
     MY_DEV_NAME="ThanhLe_Keyboard"
 
     #define some constants
