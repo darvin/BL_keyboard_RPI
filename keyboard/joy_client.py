@@ -115,49 +115,7 @@ class Joystick():
 
 
                     print "sending input"
-                    str_inp = ""
-
-                    inp = [
-                        0xA1,
-                        0x03,
-                        [
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,0,0
-                        ],
-                        0x00,
-                        0x00,0x00,0x00]
-
-                    if code <  len(inp[2]):
-                        inp[2][code] = long(value) #fixme
-
-                    print(inp)
-                    for elem in inp:
-                        if type(elem) is list:
-                            tmp_str = ""
-                            for tmp_elem in elem:
-                                tmp_str += str(tmp_elem)
-                            for i in range(0,len(tmp_str)/8):
-                                if((i+1)*8 >= len(tmp_str)):
-                                    str_inp += chr(int(tmp_str[i*8:],2))
-                                else:
-                                    str_inp += chr(int(tmp_str[i*8:(i+1)*8],2))
-                        else:
-                            str_inp += chr(elem)
-
-                    print "sending message", str_inp
-                    self.iface.send_message(str_inp)
+                    self.iface.send_input(event_type, vcode, value)
 
 
         # for event in self.dev.read_loop():
